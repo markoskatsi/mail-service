@@ -22,7 +22,6 @@ conf = ConnectionConfig(
 
 app = FastAPI()
 
-
 class EmailRequest(BaseModel):
     email: EmailStr
     name: str
@@ -30,19 +29,21 @@ class EmailRequest(BaseModel):
 
     @field_validator("name")
     def validate_name(cls, name):
-        if not name.strip():
+        name = name.strip()
+        if not name:
             raise ValueError("Please provide a name")
         if len(name) < 2:
             raise ValueError("Name must be at least 2 characters long")
-        return name.strip()
+        return name
     
     @field_validator("message")
     def validate_message(cls, message):
-        if not message.strip():
+        message = message.strip()
+        if not message:
             raise ValueError("Please provide a message")
         if len(message) < 4:
             raise ValueError("Please provide a more meaningful message")
-        return message.strip()
+        return message
 
 
 
