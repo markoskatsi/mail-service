@@ -35,6 +35,14 @@ class EmailRequest(BaseModel):
         if len(name) < 2:
             raise ValueError("Name must be at least 2 characters long")
         return name.strip()
+    
+    @field_validator("message")
+    def validate_message(cls, message):
+        if not message.strip():
+            raise ValueError("Please provide a message")
+        if len(message) < 4:
+            raise ValueError("Please provide a more meaningful message")
+        return message.strip()
 
 
 
