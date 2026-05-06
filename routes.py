@@ -4,17 +4,15 @@ from starlette.responses import JSONResponse
 from fastapi_mail import FastMail, MessageSchema, MessageType
 from config import conf
 from schemas import EmailRequest
+from email_templates import generate_auto_reply, generate_admin_notification, generate_cv_email
 
 router = APIRouter()
 
 
 @router.post("/contact")
 async def send_contact_message(request: EmailRequest) -> JSONResponse:
-    auto_reply = f"""<div style="font-family: system-ui, sans-serif, Arial; font-size: 16px;">
-                        <p>Hi {request.name},</p>
-                        <p>Thank you for reaching out! I've received your message, and will get back to you as soon as I can.</p>
-                        <p>Best regards,<br>Markos Katsi</p>
-                    </div>"""
+    auto_reply = generate_auto_reply(request)
+    admin_notification = generate_admin_notification(request)
 
     messages = [
         MessageSchema(
@@ -26,7 +24,7 @@ async def send_contact_message(request: EmailRequest) -> JSONResponse:
         MessageSchema(
             subject="New Message Received",
             recipients=["markoskatsi05@gmail.com"],
-            body=f"<p>{request.name}, {request.email}</p><p>{request.message}</p>",
+            body=admin_notification,
             subtype=MessageType.html,
         ),
     ]
@@ -41,7 +39,7 @@ async def send_cv(email: EmailStr) -> JSONResponse:
     message = MessageSchema(
         subject="CV Request",
         recipients=[email],
-        body="<p>Hi,</p><p>Please find attached my CV.</p><p>Best regards,<br>Markos Katsi</p>",
+        body=generate_cv_email(),
         subtype=MessageType.html,
         attachments=["./assets/MarkosKatsiCV.pdf"],
     )
