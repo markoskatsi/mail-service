@@ -4,7 +4,7 @@ from starlette.responses import JSONResponse
 from fastapi_mail import FastMail, MessageSchema, MessageType
 from config import conf
 from schemas import EmailRequest
-from email_templates import generate_auto_reply, generate_admin_notification, generate_cv_email
+from email_templates import generate_auto_reply, generate_admin_notification, generate_cv_email, generate_cv_request_notification
 
 router = APIRouter()
 
@@ -16,15 +16,15 @@ async def send_contact_message(request: EmailRequest) -> JSONResponse:
 
     messages = [
         MessageSchema(
-            subject="Message Received",
-            recipients=[request.email],
-            body=auto_reply,
-            subtype=MessageType.html,
-        ),
-        MessageSchema(
             subject="New Message Received",
             recipients=["markoskatsi05@gmail.com"],
             body=admin_notification,
+            subtype=MessageType.html,
+        ),
+        MessageSchema(
+            subject="Message Received",
+            recipients=[request.email],
+            body=auto_reply,
             subtype=MessageType.html,
         ),
     ]
@@ -36,14 +36,26 @@ async def send_contact_message(request: EmailRequest) -> JSONResponse:
 
 @router.post("/cv")
 async def send_cv(email: EmailStr) -> JSONResponse:
-    message = MessageSchema(
-        subject="CV Request",
-        recipients=[email],
-        body=generate_cv_email(),
-        subtype=MessageType.html,
-        attachments=["./assets/MarkosKatsiCV.pdf"],
-    )
+    cv_email = generate_cv_email()
+    cv_request_notification = generate_cv_request_notification(email)
+    
+    messages =  [
+        MessageSchema(
+            subject="CV Request",
+            recipients=[email],
+            body=cv_email,
+            subtype=MessageType.html,
+            attachments=["./assets/MarkosKatsiCV.pdf"],
+        ),
+        MessageSchema(
+            subject="CV Request",
+            recipients=["markoskatsi05@gmail.com"],
+            body=cv_request_notification,
+            subtype=MessageType.html,
+            attachments=["./assets/MarkosKatsiCV.pdf"],
+        )
+    ]
 
     fm = FastMail(conf)
-    await fm.send_message(message)
+    await fm.send_message(messages)
     return JSONResponse(content={"message": "CV has been sent"})
